@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es2018",
+		"lib": ["es2018"],
+		"strict": true,
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"outDir": "./lib/",
+		"experimentalDecorators": true
+	},
+	"exclude": [
+		"node_modules"
+	]
+}

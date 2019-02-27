@@ -2,7 +2,7 @@
   "name": "@rocketry/plugin-node-midi",
   "version": "0.0.0",
   "private": true,
-  "description": "",
+  "description": "Plugin for Rocketry that enables node-midi support",
   "homepage": "https://github.com/rocketryjs/plugin-node-midi#readme",
   "bugs": {
     "url": "https://github.com/rocketryjs/plugin-node-midi/issues"
@@ -23,6 +23,7 @@
     "build:watch": "tsc -w"
   },
   "dependencies": {
+    "@rocketry/core": "file:../rocketry",
     "midi": "^0.9.5"
   },
   "devDependencies": {
