@@ -12,7 +12,7 @@
     "url": "git+https://github.com/rocketryjs/plugin-node-midi.git"
   },
   "license": "MIT",
-  "author": "Evelyn Hathaway <npm@evelynhathaway.com> (https://evelynhathaway.com)",
+  "author": "Evelyn Hathaway <npm@evelyn.dev> (https://evelyn.dev)",
   "main": "./lib/index.js",
   "directories": {
     "lib": "./lib",
@@ -24,11 +24,11 @@
   },
   "dependencies": {
     "@rocketry/core": "file:../rocketry",
-    "midi": "^0.9.5"
+    "midi": "^1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^11.9.5",
-    "typescript": "^3.3.3333"
+    "@types/node": "^12.7.1",
+    "typescript": "^3.5.3"
   },
   "engines": {
     "node": ">=8.0.0"
