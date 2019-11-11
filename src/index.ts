@@ -38,13 +38,13 @@ export const connect = function (this: MidiLayerAPI, device: DeviceType, ports?:
 		device.input.openPort((ports || device.portNums).input);
 		device.output.openPort((ports || device.portNums).output);
 
-		// Start receiving MIDI messages for this device and relay them to Buttons through receive()
+		// Start receiving MIDI messages for this device and relay them to Buttons through `receive()`
 		device.input.on("message", device.receive);
 
 		// Notify device open
 		device.emit("open");
 	} catch (error) {
-		throw new Error("Failed to open a MIDI port. Check your port and connection to your Launchpad.\n\n" + error);
+		throw new Error(`Failed to open a MIDI port. Check your port and connection to your device.\n\n${error}`);
 	}
 };
 
@@ -57,10 +57,12 @@ export const send = function (this: MidiLayerAPI, device: DeviceType, message: M
 	} catch (error) {
 		// TODO
 		switch (error.name) {
-			default:
+			default: {
 				throw new Error(`Unknown error while sending message (in plugin-web-midi).\n\n${error}`);
+			}
 		}
 	}
+};
 };
 
 export const getDevices = function (this: MidiLayerAPI) {
