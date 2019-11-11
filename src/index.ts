@@ -48,8 +48,24 @@ export const connect = function (this: MidiLayerAPI, device: DeviceType, ports?:
 	}
 };
 
-// disconnect
-// emit
+export const disconnect = function (this: MidiLayerAPI, device: DeviceType, ports?: PortsType, options?: MIDIOptions): void {
+	try {
+		// Notify closure
+		device.emit("close");
+
+		device.input.closePort();
+		device.output.closePort();
+
+		delete device.input;
+		delete device.output;
+	} catch (error) {
+		throw new Error(`Couldn't close MIDI I/O.\n\n${error}`);
+	}
+};
+
+export const emit = function (this: MidiLayerAPI, device: DeviceType, ports?: PortsType, options?: MIDIOptions): void {
+
+};
 
 export const send = function (this: MidiLayerAPI, device: DeviceType, message: MessageType) {
 	try {
@@ -70,4 +86,6 @@ export const getDevices = function (this: MidiLayerAPI) {
 };
 
 
-registerMidiLayer({init, createMidiIO, connect, disconnect, emit, send, getDevices});
+registerMidiLayer({
+	// init, TODO
+	createMidiIO, connect, disconnect, emit, send, getDevices});
