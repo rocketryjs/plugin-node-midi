@@ -1,26 +1,20 @@
-/*
-	Module: Index - Plugin node-midi
-	Description: Plugin that enables `node-midi` support
-*/
 import midi from "midi";
 import {
-	MIDILayerAPI, MessageType, MIDIOptions, PortsType
-} from "@rocketry/core/src/types"; // TODO
+	rocketry, MIDILayerAPI, Message, MIDIOptions, PortNumbers
+} from "@rocketry/core";
 
+const missingMIDIError = Error(`No MIDI plugin is registered with Rocketry.`);
 
 export interface NodeMIDIOptions extends MIDIOptions {
 	beatclock: boolean;
 	activesensing: boolean;
 }
 
-export const inputPortsOpened = new Set();
-export const outputPortsOpened = new Set();
-
 export class NodeMIDI implements MIDILayerAPI {
 	options: NodeMIDIOptions = {sysex: true, beatclock: false, activesensing: false};
 	private input?: midi.input;
 	private output?: midi.output;
-	private ports?: PortsType;
+	private ports?: PortNumbers;
 
 	constructor (options?: Partial<NodeMIDIOptions>) {
 		// Extend options
@@ -41,43 +35,38 @@ export class NodeMIDI implements MIDILayerAPI {
 		}
 	}
 
-	connect (ports: PortsType) {
-		if (!this.input || !this.output) {
-			return false;
-		}
+	connect(ports: PortNumbers) {
+		if (!this.input || !this.output) throw missingMIDIError;
 
 		this.ports = ports;
 
 		try {
 			// Open ports
 			this.input.openPort(ports.input);
-			inputPortsOpened.add(ports.input);
+			NodeMIDI.inputPortsOpened.add(ports.input);
 			this.output.openPort(ports.output);
-			outputPortsOpened.add(ports.output);
+			NodeMIDI.outputPortsOpened.add(ports.output);
 		} catch (error) {
 			throw new Error(`Failed to open a MIDI port. Check your port and connection to your device.\n\n${error}`);
 		}
 	}
 
 	disconnect () {
-		if (!this.input || !this.output || !this.ports) {
-			return false;
-		}
+		if (!this.input || !this.output) throw missingMIDIError;
+		if (!this.ports) throw new Error("There aren't ports available to disconnect from. Is the I/O actually opened?");
 
 		try {
 			this.input.closePort();
-			inputPortsOpened.delete(this.ports.input);
+			NodeMIDI.inputPortsOpened.delete(this.ports.input);
 			this.output.closePort();
-			outputPortsOpened.delete(this.ports.output);
+			NodeMIDI.outputPortsOpened.delete(this.ports.output);
 		} catch (error) {
 			throw new Error(`Couldn't close MIDI I/O.\n\n${error}`);
 		}
 	}
 
-	send (message: MessageType) {
-		if (!this.input || !this.output) {
-			return false;
-		}
+	send (message: Message) {
+		if (!this.input || !this.output) throw missingMIDIError;
 
 		try {
 			this.output.sendMessage(message);
@@ -87,20 +76,18 @@ export class NodeMIDI implements MIDILayerAPI {
 	}
 
 	getAllPortNumbers (regex?: RegExp) {
-		if (!this.input || !this.output) {
-			return false;
-		}
+		if(!this.input || !this.output) throw missingMIDIError;
 
-		// Generate port numbers
-		const input = [...this.getPortNumbersByPort(this.input, regex)];
-		const output = [...this.getPortNumbersByPort(this.output, regex)];
-
-		return {input, output};
+		return {
+			input: this.getPortNumbersByPort(this.input, regex),
+			output: this.getPortNumbersByPort(this.output, regex),
+		};
 	}
 
 	// Gets the ports that match the input regex
-	* getPortNumbersByPort (port: midi.input | midi.output, regex?: RegExp) {
+	getPortNumbersByPort (port: midi.input | midi.output, regex?: RegExp) {
 		const portCount = port.getPortCount();
+		const ports = [];
 
 		// For all ports in input/output
 		for (let number = 0; number < portCount; number++) {
@@ -109,8 +96,10 @@ export class NodeMIDI implements MIDILayerAPI {
 				// Skip if not matched
 				continue;
 			}
-			yield {name, number};
+			ports.push({name, number});
 		}
+
+		return ports;
 	};
 
 	// Get a port's name
@@ -126,4 +115,12 @@ export class NodeMIDI implements MIDILayerAPI {
 			throw new Error("There's no device at the port number " + num);
 		}
 	};
+
+	static inputPortsOpened: Set<number> = new Set();
+	static outputPortsOpened: Set<number> = new Set();
+}
+
+
+export const useNodeMIDI = function () {
+	rocketry.registerMIDILayer(NodeMIDI);
 }
