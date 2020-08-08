@@ -3,6 +3,7 @@ import {
 	rocketry, MIDILayerAPI, Message, MIDIOptions, PortNumbers
 } from "@rocketry/core";
 
+
 const missingMIDIError = Error(`No MIDI plugin is registered with Rocketry.`);
 
 export interface NodeMIDIOptions extends MIDIOptions {
@@ -121,6 +122,7 @@ export class NodeMIDI implements MIDILayerAPI {
 }
 
 
-export const useNodeMIDI = function () {
-	rocketry.registerMIDILayer(NodeMIDI);
+declare module "@rocketry/core" {
+	interface RegisteredMIDILayer extends NodeMIDI {}
 }
+rocketry.registerMIDILayer(NodeMIDI);
