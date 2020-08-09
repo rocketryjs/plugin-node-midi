@@ -10,6 +10,9 @@ declare module "midi" {
 		(deltaTime: number, message: Array<number>): void
 	}
 	export type EventNames = "message";
+	// TODO [typescript@>=4.1.0]: Remove eslint ignore after the following is fixed
+	// https://github.com/microsoft/TypeScript/issues/37901
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 	export class Input extends GenericIO implements NodeJS.EventEmitter {
 		addListener (event: EventNames, listener: Listener): this;
 		on (event: EventNames, listener: Listener): this;
@@ -19,8 +22,11 @@ declare module "midi" {
 		removeAllListeners (event?: EventNames): this;
 		setMaxListeners (n: number): this;
 		getMaxListeners (): number;
-		listeners (event: EventNames): Function[];
-		rawListeners (event: EventNames): Function[];
+		// Preserve types from EventEmitter
+		/* eslint-disable @typescript-eslint/ban-types */
+		listeners (event: EventNames): Array<Function>;
+		rawListeners (event: EventNames): Array<Function>;
+		/* eslint-enable @typescript-eslint/ban-types */
 		emit (event: EventNames, ...args: Parameters<Listener>): boolean;
 		listenerCount (type: EventNames): number;
 		prependListener (event: EventNames, listener: Listener): this;
