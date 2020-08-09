@@ -1,23 +1,26 @@
 import midi from "midi";
 import {
-	rocketry, MIDILayerAPI, Message, MIDIOptions, PortNumbers
+	rocketry, MIDILayerAPI, Message, MIDIOptions, PortNumbers, Device
 } from "@rocketry/core";
 
 
 const missingMIDIError = Error(`No MIDI plugin is registered with Rocketry.`);
 
 export interface NodeMIDIOptions extends MIDIOptions {
-	beatclock: boolean;
-	activesensing: boolean;
+	beatClock: boolean;
+	activeSensing: boolean;
 }
 
 export class NodeMIDI implements MIDILayerAPI {
-	options: NodeMIDIOptions = {sysex: true, beatclock: false, activesensing: false};
+	options: NodeMIDIOptions = {sysEx: true, beatClock: false, activeSensing: false};
+	private device: Device;
 	private input?: midi.input;
 	private output?: midi.output;
 	private ports?: PortNumbers;
 
-	constructor (options?: Partial<NodeMIDIOptions>) {
+	constructor (device: Device, options?: Partial<NodeMIDIOptions>) {
+		this.device = device;
+
 		// Extend options
 		if (options) {
 			Object.assign(this.options, options);
@@ -25,18 +28,18 @@ export class NodeMIDI implements MIDILayerAPI {
 
 		// Connect to Node MIDI
 		try {
-			const input = this.input = new midi.input();
-			this.output = new midi.output();
+			const input = this.input = new midi.Input();
+			this.output = new midi.Output();
 
 			// Allow responses of SysEx, MIDI beat clock, and active sensing messages
 			// Inverted as they are ignore types in node-midi's API
-			input.ignoreTypes(!this.options.sysex, !this.options.beatclock, !this.options.activesensing);
+			input.ignoreTypes(!this.options.sysEx, !this.options.beatClock, !this.options.activeSensing);
 		} catch (error) {
 			throw new Error(`Couldn't create MIDI I/O (in plugin-node-midi).\n\n${error}`);
 		}
 	}
 
-	connect(ports: PortNumbers) {
+	connect (ports: PortNumbers) {
 		if (!this.input || !this.output) throw missingMIDIError;
 
 		this.ports = ports;
@@ -76,8 +79,18 @@ export class NodeMIDI implements MIDILayerAPI {
 		}
 	}
 
+	addListeners () {
+		if (!this.input) throw missingMIDIError;
+		this.input.on("message", this.device.receive.bind(this.device));
+	}
+
+	removeListeners () {
+		if (!this.input) throw missingMIDIError;
+		this.input.removeAllListeners();
+	}
+
 	getAllPortNumbers (regex?: RegExp) {
-		if(!this.input || !this.output) throw missingMIDIError;
+		if (!this.input || !this.output) throw missingMIDIError;
 
 		return {
 			input: this.getPortNumbersByPort(this.input, regex),
